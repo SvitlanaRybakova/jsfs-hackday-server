@@ -45,7 +45,7 @@ router.get("/collections", async (req: Request, res: Response) => {
 
     const groupedCollectionsArray = Object.values(groupedCollections)
 
-    res.status(200).json({ groupedCollectionsArray });
+    res.status(200).json( [groupedCollectionsArray]);
   } catch (error) {
     console.error("Error fetching photo collections:", error);
     res.status(500).json({ error: "Failed to fetch photo collections" });
