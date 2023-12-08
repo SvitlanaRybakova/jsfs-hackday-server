@@ -43,10 +43,38 @@ router.get("/collections", async (req: Request, res: Response) => {
       return acc;
     }, {});
 
-    res.status(200).json({ groupedCollections });
+    const groupedCollectionsArray = Object.values(groupedCollections)
+
+    res.status(200).json({ groupedCollectionsArray });
   } catch (error) {
     console.error("Error fetching photo collections:", error);
     res.status(500).json({ error: "Failed to fetch photo collections" });
+  }
+});
+
+router.get("/collections/:title", async (req: Request, res: Response) => {
+  try {
+    const title = req.params.title;
+
+    if (!title) {
+      return res.status(400).json({ error: "Title  is required" });
+    }
+
+    const photosCollection = db.collection("photos");
+    const querySnapshot = await photosCollection
+      .where("collection", "==", title)
+      .get();
+
+    const matchingDocuments: Photo[] = [];
+    querySnapshot.forEach((doc) => {
+      const photoData = doc.data() as Photo;
+      matchingDocuments.push(photoData);
+    });
+
+    res.status(200).json({ data: matchingDocuments });
+  } catch (error) {
+    console.error("Error retrieving collection by title:", error);
+    res.status(500).json({ error: "Failed to retrieve collection by title" });
   }
 });
 
