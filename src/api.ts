@@ -130,4 +130,42 @@ router.post(
   }
 );
 
+router.delete("/collections/:photoId", async (req: Request, res: Response) => {
+  try {
+    const { photoId } = req.params;
+
+    if (!photoId) {
+      return res.status(400).json({ error: "Photo ID is required" });
+    }
+
+    const photosCollectionRef = db.collection("photos");
+    const querySnapshot = await photosCollectionRef.get();
+
+    let foundPhotoId = null;
+    let foundPath = null;
+
+    querySnapshot.forEach((doc) => {
+      const photoData = doc.data();
+      if (photoData.photoId === photoId) {
+        foundPhotoId = doc.id;
+        foundPath = photoData.path;
+      }
+    });
+
+    if (!foundPhotoId || !foundPath) {
+      return res.status(404).json({ error: "Photo not found" });
+    }
+
+
+    await bucket.file(foundPath).delete();
+    await db.collection("photos").doc(foundPhotoId).delete();
+
+
+    return res.status(200).json({ message: "Photo deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting photo:", error);
+    return res.status(500).json({ error: "Failed to delete photo" });
+  }
+});
+
 export default router;
