@@ -130,6 +130,41 @@ router.post(
   }
 );
 
+router.put("/collections/:oldCollectionName", async (req, res) => {
+  try {
+    const { oldCollectionName } = req.params;
+    const { newCollectionName } = req.body;
+
+    if (!newCollectionName) {
+      return res.status(400).json({ error: "New collection name is required" });
+    }
+
+    const querySnapshot = await db
+      .collection("photos")
+      .where("collection", "==", oldCollectionName)
+      .get();
+
+    const batch = db.batch();
+
+    querySnapshot.forEach((doc) => {
+      const docRef = db.collection("photos").doc(doc.id);
+      batch.update(docRef, { collection: newCollectionName });
+    });
+
+  
+    await batch.commit();
+
+    return res
+      .status(200)
+      .json({ message: "Collection property updated successfully" });
+  } catch (error) {
+    console.error("Error updating collection property:", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to update collection property" });
+  }
+});
+
 router.delete("/collections/:photoId", async (req: Request, res: Response) => {
   try {
     const { photoId } = req.params;
